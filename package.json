@@ -11,7 +11,7 @@
     "test:unit": "NODE_ENV=test mocha --require @babel/register --opts tests/unit/mocha.opts tests/unit/**/*.spec.js"
   },
   "devDependencies": {
-    "@babel/core": "^7.4.5",
+    "@babel/core": "^7.29.6",
     "@babel/node": "^7.4.5",
     "@babel/preset-env": "^7.4.5",
     "chai": "^4.2.0",
