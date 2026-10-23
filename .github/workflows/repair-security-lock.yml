@@ -1,0 +1,52 @@
+name: Repair security lockfile
+on:
+  push:
+    branches: [fix/dependabot-security-dependencies]
+    paths: [.github/workflows/repair-security-lock.yml, package.json]
+permissions:
+  contents: write
+jobs:
+  lockfile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/dependabot-security-dependencies
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Generate and verify installation without install scripts
+        run: |
+          if (npm install --package-lock-only --ignore-scripts && npm ci --ignore-scripts) > npm-step.log 2>&1; then
+            cat npm-step.log
+          else
+            cat npm-step.log
+            node <<'NODE'
+          const fs = require('node:fs');
+          const text = fs.readFileSync('npm-step.log', 'utf8').split('\n').filter(line => /npm (error|ERR!)/i.test(line)).slice(-20).join('\n') || 'npm failed; inspect job logs';
+          console.log('::error::' + text.replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A'));
+          NODE
+            exit 1
+          fi
+      - name: Verify targeted versions
+        run: |
+          node <<'NODE'
+          const assert = require('node:assert/strict');
+          const entries = Object.entries(require('./package-lock.json').packages);
+          const expected = {'serialize-javascript':'7.0.3','js-yaml':'4.3.0','body-parser':'1.20.6','brace-expansion':'1.1.16','qs':'6.16.0','browserslist':'4.28.7','baseline-browser-mapping':'2.11.0'};
+          for (const [name, version] of Object.entries(expected)) {
+            const matches = entries.filter(([p, pkg]) => p.endsWith('node_modules/' + name) && (name !== 'js-yaml' || pkg.version.startsWith('4.')) && (name !== 'brace-expansion' || pkg.version.startsWith('1.')));
+            assert(matches.length > 0, name + ' missing from targeted lockfile entries');
+            for (const [p, pkg] of matches) assert.equal(pkg.version, version, p);
+          }
+          assert.match(require('./package-lock.json').packages['node_modules/express'].version, /^4\./);
+          NODE
+      - name: Commit only generated lockfile
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- package-lock.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'fix(security): regenerate lockfile for patched dependencies'
+            git push origin HEAD:refs/heads/fix/dependabot-security-dependencies
+          fi
