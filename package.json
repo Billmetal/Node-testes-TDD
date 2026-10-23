@@ -21,11 +21,18 @@
     "supertest": "^4.0.2"
   },
   "overrides": {
-    "@babel/core": ">=7.29.6"
+    "@babel/core": ">=7.29.6",
+    "body-parser": "$body-parser",
+    "serialize-javascript": "7.0.3",
+    "js-yaml@^4.0.0": "4.3.0",
+    "brace-expansion@^1.0.0": "1.1.16",
+    "qs": "6.16.0",
+    "browserslist": "4.28.7",
+    "baseline-browser-mapping": "2.11.0"
   },
   "dependencies": {
-    "body-parser": "^1.20.4",
-    "express": "^4.22.1",
+    "body-parser": "1.20.6",
+    "express": "^4.22.3",
     "mongoose": "^8.8.3"
   }
 }
