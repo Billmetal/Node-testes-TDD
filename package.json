@@ -33,6 +33,6 @@
   "dependencies": {
     "body-parser": "1.20.6",
     "express": "^4.22.3",
-    "mongoose": "^8.8.3"
+    "mongoose": "^8.24.7"
   }
 }
